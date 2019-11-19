@@ -44,6 +44,7 @@ class AutoSklearnEstimator(BaseEstimator):
         smac_scenario_args=None,
         logging_config=None,
         metadata_directory=None,
+        fairness=False
     ):
         """
         Parameters
@@ -252,6 +253,8 @@ class AutoSklearnEstimator(BaseEstimator):
         self._automl = None  # type: Optional[List[BaseAutoML]]
         # n_jobs after conversion to a number (b/c default is None)
         self._n_jobs = None
+        # check if it is for fairness
+        self.fairness = fairness
         super().__init__()
 
     def build_automl(
@@ -653,7 +656,6 @@ class AutoSklearnClassifier(AutoSklearnEstimator):
 
         # remember target type for using in predict_proba later.
         self.target_type = target_type
-
         super().fit(
             X=X,
             y=y,

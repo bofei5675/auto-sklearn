@@ -41,6 +41,7 @@ class EnsembleBuilder(multiprocessing.Process):
             sleep_duration: int=2,
             memory_limit: int=1000,
             read_at_most: int=5,
+            resampling_strategy_arguments: dict=None,
             random_state: Optional[Union[int, np.random.RandomState]]=None,
     ):
         """
@@ -124,7 +125,7 @@ class EnsembleBuilder(multiprocessing.Process):
 
         self.start_time = 0
         self.model_fn_re = re.compile(r'_([0-9]*)_([0-9]*)\.npy')
-
+        self.resampling_strategy_arguments = resampling_strategy_arguments
         # already read prediction files
         # {"file name": {
         #    "ens_score": float
@@ -387,6 +388,10 @@ class EnsembleBuilder(multiprocessing.Process):
             # no model left; try to use dummy score (num_run==0)
             self.logger.warning("No models better than random - "
                                 "using Dummy Score!")
+            self.logger.warning('Dummy score is ' + str(dummy_score))
+            self.logger.warning('Trained score is ' + str([(k,
+                                                            v["ens_score"],
+                                                            v["num_run"]) for k, v in self.read_preds.items()]))
             sorted_keys = [
                 (k, v["ens_score"], v["num_run"]) for k, v in self.read_preds.items()
                 if v["seed"] == self.seed and v["num_run"] == 1
@@ -533,6 +538,10 @@ class EnsembleBuilder(multiprocessing.Process):
         """
 
         predictions_train = np.array([self.read_preds[k][Y_ENSEMBLE] for k in selected_keys])
+        if self.resampling_strategy_arguments is not None:
+            mask = self.resampling_strategy_arguments.get('fairness_mask', None)
+        else:
+            mask = None
         include_num_runs = [(self.read_preds[k]["seed"], self.read_preds[k]["num_run"]) for k in selected_keys]
 
         # check hash if ensemble training data changed

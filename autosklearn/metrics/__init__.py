@@ -258,7 +258,10 @@ for name, metric in [('precision', sklearn.metrics.precision_score),
 
 
 def calculate_score(solution, prediction, task_type, metric,
-                    all_scoring_functions=False):
+                    all_scoring_functions=False, mask=None):
+    #print(solution.shape)
+    #print(prediction.shape)
+    #print(mask.shape)
     if task_type not in TASK_TYPES:
         raise NotImplementedError(task_type)
 
@@ -303,6 +306,9 @@ def calculate_score(solution, prediction, task_type, metric,
             cprediction = sanitize_array(prediction)
             score = metric(solution, cprediction)
         else:
-            score = metric(solution, prediction)
+            if mask is None:
+                score = metric(solution, prediction)
+            else:
+                score = metric(solution, prediction, mask=mask)
 
     return score

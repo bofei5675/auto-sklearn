@@ -197,7 +197,7 @@ class AbstractEvaluator(object):
                                      init_params=self._init_params)
         return model
 
-    def _loss(self, y_true, y_hat, all_scoring_functions=None):
+    def _loss(self, y_true, y_hat, mask=None, all_scoring_functions=None):
         all_scoring_functions = (
             self.all_scoring_functions
             if all_scoring_functions is None
@@ -211,7 +211,7 @@ class AbstractEvaluator(object):
 
         score = calculate_score(
             y_true, y_hat, self.task_type, self.metric,
-            all_scoring_functions=all_scoring_functions)
+            all_scoring_functions=all_scoring_functions, mask=mask)
 
         if hasattr(score, '__len__'):
             # TODO: instead of using self.metric, it should use all metrics given by key.

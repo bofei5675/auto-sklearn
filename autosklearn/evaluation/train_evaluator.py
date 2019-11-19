@@ -146,6 +146,7 @@ class TrainEvaluator(AbstractEvaluator):
             # TODO: mention that no additional run info is possible in this
             # case! -> maybe remove full CV from the train evaluator anyway and
             # make the user implement this!
+            mask = self.resampling_strategy_args.get('fairness_mask')
             for i, (train_split, test_split) in enumerate(self.cv.split(
                     self.X_train, y,
                     groups=self.resampling_strategy_args.get('groups')
@@ -190,6 +191,7 @@ class TrainEvaluator(AbstractEvaluator):
                 train_loss = self._loss(
                     self.Y_train_targets[train_split],
                     train_pred,
+                    mask=mask[train_split]
                 )
                 train_losses.append(train_loss)
                 # number of training data points for this fold. Used for weighting
@@ -200,6 +202,7 @@ class TrainEvaluator(AbstractEvaluator):
                 optimization_loss = self._loss(
                     self.Y_targets[i],
                     opt_pred,
+                    mask[test_split]
                 )
                 opt_losses.append(optimization_loss)
                 # number of optimization data points for this fold. Used for weighting
@@ -263,7 +266,10 @@ class TrainEvaluator(AbstractEvaluator):
                 Y_test_pred = None
 
             self.Y_optimization = Y_targets
-            loss = self._loss(Y_targets, Y_optimization_pred)
+            if mask is None:
+                loss = self._loss(Y_targets, Y_optimization_pred)
+            else:
+                loss = self._loss(Y_targets, Y_optimization_pred, mask)
             self.Y_actual_train = Y_train_targets
 
             if self.cv_folds > 1:
@@ -342,7 +348,7 @@ class TrainEvaluator(AbstractEvaluator):
         train_indices = self.subsample_indices(train_indices)
 
         self.indices[fold] = ((train_indices, test_indices))
-
+        mask = self.resampling_strategy_args.get('fairness_mask', None)
         if iterative:
 
             # Do only output the files in the case of iterative holdout,
@@ -380,7 +386,7 @@ class TrainEvaluator(AbstractEvaluator):
                         self.model = model
 
                     train_loss = self._loss(self.Y_train[train_indices],
-                                            Y_train_pred,
+                                            Y_train_pred
                                             )
                     loss = self._loss(self.Y_train[test_indices], Y_optimization_pred)
                     additional_run_info = model.get_additional_run_info()
@@ -423,10 +429,20 @@ class TrainEvaluator(AbstractEvaluator):
                     train_indices=train_indices,
                     test_indices=test_indices
                 )
-                train_loss = self._loss(self.Y_train[train_indices],
-                                        Y_train_pred,
-                                        )
-                loss = self._loss(self.Y_train[test_indices], Y_optimization_pred)
+                if mask is None:
+                    train_loss = self._loss(self.Y_train[train_indices],
+                                            Y_train_pred
+                                            )
+                else:
+                    train_loss = self._loss(self.Y_train[train_indices],
+                                            Y_train_pred,
+                                            mask[train_indices]
+                                            )
+                if mask is None:
+                    loss = self._loss(self.Y_train[test_indices], Y_optimization_pred)
+                else:
+                    loss = self._loss(self.Y_train[test_indices], Y_optimization_pred, mask[test_indices])
+
                 additional_run_info = model.get_additional_run_info()
                 self.finish_up(
                     loss=loss,
@@ -519,7 +535,7 @@ class TrainEvaluator(AbstractEvaluator):
         return train_pred, opt_pred, valid_pred, test_pred
 
     def get_splitter(self, D):
-
+        # D is data manager
         if self.resampling_strategy_args is None:
             self.resampling_strategy_args = {}
 
@@ -582,6 +598,8 @@ class TrainEvaluator(AbstractEvaluator):
 
         y = D.data['Y_train']
         shuffle = self.resampling_strategy_args.get('shuffle', True)
+        fairness_mask =  self.resampling_strategy_args.get('fairness_mask', None)
+        # assert fairness_mask != None # debug
         train_size = 0.67
         if self.resampling_strategy_args:
             train_size = self.resampling_strategy_args.get('train_size',
