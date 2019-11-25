@@ -380,7 +380,8 @@ class EnsembleBuilder(multiprocessing.Process):
         dummy_score = list(filter(lambda x: x[2] == 1, sorted_keys))[0]
         self.logger.debug("Use %f as dummy score" %
                           dummy_score[1])
-        sorted_keys = filter(lambda x: x[1] > dummy_score[1], sorted_keys)
+        # not removing the score that less than dummy.
+        #sorted_keys = filter(lambda x: x[1] > dummy_score[1], sorted_keys)
         # remove Dummy Classifier
         sorted_keys = list(filter(lambda x: x[2] > 1, sorted_keys))
         if not sorted_keys:
