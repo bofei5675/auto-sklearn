@@ -44,6 +44,7 @@ class AutoSklearnEstimator(BaseEstimator):
         smac_scenario_args=None,
         logging_config=None,
         metadata_directory=None,
+        all_scoring_functions=True,
     ):
         """
         Parameters
@@ -252,6 +253,7 @@ class AutoSklearnEstimator(BaseEstimator):
         self._automl = None  # type: Optional[List[BaseAutoML]]
         # n_jobs after conversion to a number (b/c default is None)
         self._n_jobs = None
+        self.all_scoring_functions = all_scoring_functions
         super().__init__()
 
     def build_automl(
@@ -307,6 +309,7 @@ class AutoSklearnEstimator(BaseEstimator):
             smac_scenario_args=smac_scenario_args,
             logging_config=self.logging_config,
             metadata_directory=self.metadata_directory,
+            all_scoring_functions=self.all_scoring_functions
         )
 
         return automl

@@ -228,6 +228,7 @@ class AutoMLSMBO(object):
                  exclude_preprocessors=None,
                  disable_file_output=False,
                  smac_scenario_args=None,
+                 all_scoring_functions=True,
                  get_smac_object_callback=None):
         super(AutoMLSMBO, self).__init__()
         # data related
@@ -236,7 +237,7 @@ class AutoMLSMBO(object):
         self.metric = metric
         self.task = None
         self.backend = backend
-
+        self.all_scoring_function = all_scoring_functions
         # the configuration space
         self.config_space = config_space
 
@@ -440,6 +441,7 @@ class AutoMLSMBO(object):
                                     metric=self.metric,
                                     memory_limit=self.memory_limit,
                                     disable_file_output=self.disable_file_output,
+                                    all_scoring_functions=self.all_scoring_function,
                                     **self.resampling_strategy_args)
 
         startup_time = self.watcher.wall_elapsed(self.dataset_name)

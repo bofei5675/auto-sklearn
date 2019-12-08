@@ -57,7 +57,7 @@ def _get_y_array(y, task_type):
 class TrainEvaluator(AbstractEvaluator):
     def __init__(self, backend, queue, metric,
                  configuration=None,
-                 all_scoring_functions=False,
+                 all_scoring_functions=True,
                  seed=1,
                  output_y_hat_optimization=True,
                  resampling_strategy=None,

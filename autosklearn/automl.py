@@ -85,6 +85,7 @@ class AutoML(BaseEstimator):
                  get_smac_object_callback=None,
                  smac_scenario_args=None,
                  logging_config=None,
+                 all_scoring_functions=True
                  ):
         super(AutoML, self).__init__()
         self._backend = backend
@@ -127,7 +128,7 @@ class AutoML(BaseEstimator):
         self.models_ = None
         self.ensemble_ = None
         self._can_predict = False
-
+        self.all_scoring_functions = all_scoring_functions
         self._debug_mode = debug_mode
 
         if not isinstance(self._time_for_task, int):
@@ -483,6 +484,7 @@ class AutoML(BaseEstimator):
                 exclude_preprocessors=self._exclude_preprocessors,
                 disable_file_output=self._disable_evaluator_output,
                 get_smac_object_callback=self._get_smac_object_callback,
+                all_scoring_functions=self.all_scoring_functions,
                 smac_scenario_args=self._smac_scenario_args,
             )
             self.runhistory_, self.trajectory_ = \
@@ -712,7 +714,7 @@ class AutoML(BaseEstimator):
                                prediction=prediction,
                                task_type=self._task,
                                metric=self._metric,
-                               all_scoring_functions=False)
+                               all_scoring_functions=self.all_scoring_functions)
 
     @property
     def cv_results_(self):
